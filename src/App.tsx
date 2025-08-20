@@ -12,9 +12,9 @@ const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#f97316',
-      light: '#fb923c',
-      dark: '#ea580c',
+      main: '#16f98fff',
+      light: '#75fb3cff',
+      dark: '#d0ea0cff',
     },
     secondary: {
       main: '#fff7ed',

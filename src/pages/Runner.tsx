@@ -71,72 +71,131 @@ export const Runner: React.FC = () => {
           // Visual delay to show the action
           await new Promise(resolve => setTimeout(resolve, 2000));
           
-          // Inject automation script directly into iframe
-          const automationScript = `
-            (function() {
-              const selectors = '${action.selector}'.split(',').map(s => s.trim());
-              let element = null;
+          const iframe = iframeRef.current;
+          
+          // Method 1: Try direct DOM access (same origin)
+          try {
+            const iframeDoc = iframe?.contentDocument;
+            if (iframeDoc) {
+              const selectors = action.selector.split(',').map((s: string) => s.trim());
+              let element: HTMLElement | null = null;
               
               for (const sel of selectors) {
                 try {
-                  element = document.querySelector(sel);
+                  element = iframeDoc.querySelector(sel) as HTMLElement;
                   if (element) break;
                 } catch (e) { continue; }
               }
               
               if (element) {
+                // Highlight element
                 const originalStyle = element.style.cssText;
-                element.style.cssText += 'border: 3px solid red !important; background-color: yellow !important; transition: all 0.3s;';
+                element.style.cssText += 'border: 3px solid #f97316 !important; background-color: #fff7ed !important; box-shadow: 0 0 10px #f97316 !important;';
                 
+                // Execute action after highlight
                 setTimeout(() => {
-                  switch ('${action.action}') {
+                  switch (action.action) {
                     case 'click':
-                      element.click();
+                      element!.click();
+                      console.log('✅ Clicked:', element);
                       break;
                     case 'type':
-                      if (element.tagName === 'INPUT' && '${action.value}') {
-                        element.focus();
-                        element.value = '${action.value}';
-                        element.dispatchEvent(new Event('input', { bubbles: true }));
-                        element.dispatchEvent(new Event('change', { bubbles: true }));
+                      if (element!.tagName === 'INPUT' && action.value) {
+                        (element as HTMLInputElement).focus();
+                        (element as HTMLInputElement).value = action.value;
+                        element!.dispatchEvent(new Event('input', { bubbles: true }));
+                        element!.dispatchEvent(new Event('change', { bubbles: true }));
+                        console.log('✅ Typed:', action.value, 'into', element);
                       }
                       break;
                   }
                   
+                  // Remove highlight
                   setTimeout(() => {
-                    element.style.cssText = originalStyle;
+                    element!.style.cssText = originalStyle;
                   }, 1000);
-                }, 500);
+                }, 800);
+                
+                continue; // Skip postMessage if direct access worked
               }
-            })();
-          `;
-          
-          // Execute script in iframe
-          const iframe = iframeRef.current;
-          let executed = false;
-          
-          try {
-            if (iframe?.contentDocument) {
-              const script = iframe.contentDocument.createElement('script');
-              script.textContent = automationScript;
-              iframe.contentDocument.head.appendChild(script);
-              iframe.contentDocument.head.removeChild(script);
-              executed = true;
             }
           } catch (error) {
-            executed = false;
+            console.log('Direct access failed, trying postMessage...');
           }
           
-          if (!executed) {
-            // Fallback to postMessage
-            const message = {
-              type: 'AUTOMATION_ACTION',
-              action: action.action,
-              selector: action.selector,
-              value: action.value,
-              step: i + 1
-            };
-            iframe?.contentWindow?.postMessage(message, '*');
+          // Method 2: PostMessage for cross-origin
+          const message = {
+            type: 'AUTOMATION_ACTION',
+            action: action.action,
+            selector: action.selector,
+            value: action.value,
+            step: i + 1
+          };
+          
+          iframe?.contentWindow?.postMessage(message, '*');
+          console.log('📤 Sent postMessage:', message);
+          
+          // Method 3: Inject listener script if not exists
+          try {
+            if (iframe?.contentDocument) {
+              const existingScript = iframe.contentDocument.getElementById('automation-listener');
+              if (!existingScript) {
+                const script = iframe.contentDocument.createElement('script');
+                script.id = 'automation-listener';
+                script.textContent = `
+                  console.log('🎯 Automation listener injected');
+                  window.addEventListener('message', function(event) {
+                    if (event.data.type === 'AUTOMATION_ACTION') {
+                      const { action, selector, value } = event.data;
+                      console.log('📥 Received automation action:', action, selector, value);
+                      
+                      const selectors = selector.split(',').map(s => s.trim());
+                      let element = null;
+                      
+                      for (const sel of selectors) {
+                        try {
+                          element = document.querySelector(sel);
+                          if (element) break;
+                        } catch (e) { continue; }
+                      }
+                      
+                      if (element) {
+                        const originalStyle = element.style.cssText;
+                        element.style.cssText += 'border: 3px solid #f97316 !important; background-color: #fff7ed !important; box-shadow: 0 0 10px #f97316 !important;';
+                        
+                        setTimeout(() => {
+                          switch (action) {
+                            case 'click':
+                              element.click();
+                              console.log('✅ Automation clicked:', element);
+                              break;
+                            case 'type':
+                              if (element.tagName === 'INPUT' && value) {
+                                element.focus();
+                                element.value = value;
+                                element.dispatchEvent(new Event('input', { bubbles: true }));
+                                element.dispatchEvent(new Event('change', { bubbles: true }));
+                                console.log('✅ Automation typed:', value);
+                              }
+                              break;
+                          }
+                          
+                          setTimeout(() => {
+                            element.style.cssText = originalStyle;
+                          }, 1000);
+                        }, 500);
+                      } else {
+                        console.log('❌ Element not found:', selector);
+                      }
+                    }
+                  });
+                `;
+                iframe.contentDocument.head.appendChild(script);
+                console.log('🔧 Injected automation listener script');
+              }
+            }
+          } catch (error) {
+            console.log('Script injection failed:', error);
           }
         }
       }

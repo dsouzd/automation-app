@@ -56,7 +56,7 @@ export const convertPromptToScriptAPI = async (prompt: string, onProgress?: (mes
   if (usernameMatch) {
     script.push({ 
       action: 'type', 
-      selector: 'input[type="email"], input[name="email"], input[name="username"], #email, #username', 
+      selector: 'input[name="username"], input[type="text"], #username, .MuiInputBase-input', 
       value: usernameMatch[1] 
     });
   }
@@ -83,7 +83,7 @@ export const convertPromptToScriptAPI = async (prompt: string, onProgress?: (mes
     success: true,
     script: script.length > 0 ? script : [
       { action: 'click', selector: 'a[href*="login"], nav a, .MuiButton-root' },
-      { action: 'type', selector: 'input[type="email"], input[name="email"]', value: 'test@gmail.com' },
+      { action: 'type', selector: 'input[name="username"], input[type="text"], .MuiInputBase-input', value: 'test@gmail.com' },
       { action: 'type', selector: 'input[type="password"], input[name="password"]', value: 'test' },
       { action: 'click', selector: 'button[type="submit"], .MuiButton-root[type="submit"]' }
     ]
