@@ -25,23 +25,23 @@ export const convertPromptToScriptAPI = async (prompt: string, onProgress?: (mes
   
   // Stage 1: Understanding DOM
   onProgress?.('🔍 Analyzing target application DOM structure...');
-  await new Promise(resolve => setTimeout(resolve, 10000));
+  await new Promise(resolve => setTimeout(resolve, 3000));
   
   // Stage 2: Processing natural language
   onProgress?.('🧠 Processing natural language instructions...');
-  await new Promise(resolve => setTimeout(resolve, 10000));
+  await new Promise(resolve => setTimeout(resolve, 2500));
   
   // Stage 3: Generating script
   onProgress?.('⚙️ Generating automation script...');
-  await new Promise(resolve => setTimeout(resolve, 10000));
+  await new Promise(resolve => setTimeout(resolve, 2000));
   
   // Stage 4: Internal testing
   onProgress?.('🧪 Running internal script validation...');
-  await new Promise(resolve => setTimeout(resolve, 10000));
+  await new Promise(resolve => setTimeout(resolve, 2500));
   
   // Stage 5: Final preparation
   onProgress?.('✅ Preparing execution steps...');
-  await new Promise(resolve => setTimeout(resolve, 10000));
+  await new Promise(resolve => setTimeout(resolve, 1500));
   
   // Parse the prompt to generate appropriate actions
   if (lowerPrompt.includes('click on login') || lowerPrompt.includes('login navigation')) {
