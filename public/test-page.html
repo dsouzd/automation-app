@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Page for Automation</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 400px; margin: 0 auto; }
+        input, button { margin: 10px 0; padding: 10px; width: 100%; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .nav { margin-bottom: 20px; }
+        .nav a { margin-right: 15px; text-decoration: none; color: #007bff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav">
+            <a href="#" id="loginNav">Login</a>
+            <a href="#" id="homeNav">Home</a>
+            <a href="#" id="aboutNav">About</a>
+        </div>
+        
+        <h2>Login Form</h2>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Username" />
+            <input type="password" id="password" placeholder="Password" />
+            <button type="button" id="loginBtn">Login</button>
+        </form>
+        
+        <div id="message" style="margin-top: 20px; padding: 10px; display: none;"></div>
+    </div>
+
+    <script>
+        document.getElementById('loginBtn').addEventListener('click', function() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const message = document.getElementById('message');
+            
+            if (username && password) {
+                message.style.display = 'block';
+                message.style.background = '#d4edda';
+                message.style.color = '#155724';
+                message.textContent = `Login successful! Welcome, ${username}`;
+            } else {
+                message.style.display = 'block';
+                message.style.background = '#f8d7da';
+                message.style.color = '#721c24';
+                message.textContent = 'Please enter both username and password';
+            }
+        });
+    </script>
+</body>
+</html>
