@@ -135,68 +135,7 @@ export const Runner: React.FC = () => {
           iframe?.contentWindow?.postMessage(message, '*');
           console.log('📤 Sent postMessage:', message);
           
-          // Method 3: Inject listener script if not exists
-          try {
-            if (iframe?.contentDocument) {
-              const existingScript = iframe.contentDocument.getElementById('automation-listener');
-              if (!existingScript) {
-                const script = iframe.contentDocument.createElement('script');
-                script.id = 'automation-listener';
-                script.textContent = `
-                  console.log('🎯 Automation listener injected');
-                  window.addEventListener('message', function(event) {
-                    if (event.data.type === 'AUTOMATION_ACTION') {
-                      const { action, selector, value } = event.data;
-                      console.log('📥 Received automation action:', action, selector, value);
-                      
-                      const selectors = selector.split(',').map(s => s.trim());
-                      let element = null;
-                      
-                      for (const sel of selectors) {
-                        try {
-                          element = document.querySelector(sel);
-                          if (element) break;
-                        } catch (e) { continue; }
-                      }
-                      
-                      if (element) {
-                        const originalStyle = element.style.cssText;
-                        element.style.cssText += 'border: 3px solid #f97316 !important; background-color: #fff7ed !important; box-shadow: 0 0 10px #f97316 !important;';
-                        
-                        setTimeout(() => {
-                          switch (action) {
-                            case 'click':
-                              element.click();
-                              console.log('✅ Automation clicked:', element);
-                              break;
-                            case 'type':
-                              if (element.tagName === 'INPUT' && value) {
-                                element.focus();
-                                element.value = value;
-                                element.dispatchEvent(new Event('input', { bubbles: true }));
-                                element.dispatchEvent(new Event('change', { bubbles: true }));
-                                console.log('✅ Automation typed:', value);
-                              }
-                              break;
-                          }
-                          
-                          setTimeout(() => {
-                            element.style.cssText = originalStyle;
-                          }, 1000);
-                        }, 500);
-                      } else {
-                        console.log('❌ Element not found:', selector);
-                      }
-                    }
-                  });
-                `;
-                iframe.contentDocument.head.appendChild(script);
-                console.log('🔧 Injected automation listener script');
-              }
-            }
-          } catch (error) {
-            console.log('Script injection failed:', error);
-          }
+
         }
       }
     } catch (error) {
@@ -213,48 +152,46 @@ export const Runner: React.FC = () => {
   return (
     <Box sx={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
       <Box sx={{ flex: 2, p: 1 }}>
-        <Paper sx={{ height: '100%', bgcolor: '#f8f9fa', position: 'relative' }}>
+        <Paper sx={{ height: '100%', bgcolor: '#f1f5f9', position: 'relative', overflow: 'hidden' }}>
+          {/* Status Bar */}
+          {isExecuting && currentStep > 0 && (
+            <Box sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bgcolor: 'primary.main',
+              color: 'white',
+              px: 2,
+              py: 1,
+              zIndex: 1000,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontSize: '0.875rem',
+              fontWeight: 500
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <CircularProgress size={14} sx={{ color: 'white', mr: 1 }} />
+                <span>Executing: {scriptActions[currentStep - 1]?.action.toUpperCase()}</span>
+              </Box>
+              <span>Step {currentStep}/{scriptActions.length}</span>
+            </Box>
+          )}
+          
           <iframe
             ref={iframeRef}
             src={url || 'http://localhost:4001'}
-            style={{ width: '100%', height: '100%', border: 'none', borderRadius: '8px' }}
+            style={{ 
+              width: '100%', 
+              height: '100%', 
+              border: 'none', 
+              borderRadius: '8px',
+              marginTop: isExecuting && currentStep > 0 ? '40px' : '0',
+              transition: 'margin-top 0.3s ease'
+            }}
             title="Target Application"
           />
-          <AutomationOverlay
-            isVisible={isExecuting && currentStep > 0}
-            currentAction={scriptActions[currentStep - 1]?.action}
-            currentSelector={scriptActions[currentStep - 1]?.selector}
-            step={currentStep}
-          />
-          
-          {/* Floating Action Indicator */}
-          {isExecuting && currentStep > 0 && (
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 16,
-                right: 16,
-                bgcolor: 'primary.main',
-                color: 'white',
-                p: 2,
-                borderRadius: 2,
-                zIndex: 1001,
-                minWidth: 200,
-                animation: 'slideIn 0.5s ease-out',
-                '@keyframes slideIn': {
-                  '0%': { transform: 'translateX(100%)', opacity: 0 },
-                  '100%': { transform: 'translateX(0)', opacity: 1 }
-                }
-              }}
-            >
-              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                🤖 Automation Active
-              </Typography>
-              <Typography variant="body2">
-                {scriptActions[currentStep - 1]?.action.toUpperCase()}: {scriptActions[currentStep - 1]?.value || 'Element'}
-              </Typography>
-            </Box>
-          )}
         </Paper>
       </Box>
       
@@ -262,8 +199,12 @@ export const Runner: React.FC = () => {
         <Paper sx={{ height: '100%', p: 2, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <AutoAwesome sx={{ color: 'primary.main', mr: 1, fontSize: 24 }} />
-              <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 600 }}>
+              <AutoAwesome sx={{ color: 'primary.main', mr: 1.5, fontSize: 20 }} />
+              <Typography variant="h6" sx={{ 
+                color: 'text.primary', 
+                fontWeight: 500,
+                fontFamily: '"Inter", "Roboto", sans-serif'
+              }}>
                 Automation Control
               </Typography>
             </Box>
@@ -331,59 +272,74 @@ export const Runner: React.FC = () => {
           )}
 
           {isLoadingScript && (
-            <Box sx={{ mb: 2, p: 2, bgcolor: '#f0f4f8', borderRadius: 1, border: '1px solid #e3f2fd' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <CircularProgress size={18} sx={{ mr: 2, color: 'primary.main' }} />
-                <Typography sx={{ fontWeight: 500, color: 'primary.main' }}>
-                  AI Processing Pipeline
+            <Box sx={{ mb: 2, p: 2.5, bgcolor: '#f8fafc', borderRadius: 2, border: '1px solid #e2e8f0' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+                <CircularProgress size={16} sx={{ mr: 2, color: 'primary.main' }} />
+                <Typography sx={{ 
+                  fontWeight: 500, 
+                  color: 'text.primary',
+                  fontSize: '0.95rem'
+                }}>
+                  Processing Request
                 </Typography>
               </Box>
-              <Typography variant="body2" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>
-                {loadingMessage || 'Initializing AI processing...'}
+              <Typography variant="body2" sx={{ 
+                color: 'text.secondary', 
+                fontSize: '0.85rem'
+              }}>
+                {loadingMessage || 'Initializing processing...'}
               </Typography>
               <LinearProgress 
                 sx={{ 
-                  mt: 1, 
-                  height: 4, 
+                  mt: 1.5, 
+                  height: 3, 
                   borderRadius: 2,
-                  '& .MuiLinearProgress-bar': {
-                    transition: 'transform 0.8s ease'
-                  }
+                  bgcolor: '#e2e8f0'
                 }} 
               />
             </Box>
           )}
 
           {isExecuting && (
-            <Box sx={{ mb: 2, p: 2, bgcolor: '#e8f5e8', borderRadius: 1, border: '1px solid #c8e6c9' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <CircularProgress size={18} sx={{ color: 'success.main', mr: 2 }} />
-                <Typography sx={{ fontWeight: 500, color: 'success.dark' }}>
-                  Executing Step {currentStep} of {scriptActions.length}
+            <Box sx={{ mb: 2, p: 2.5, bgcolor: '#f0f9ff', borderRadius: 2, border: '1px solid #bae6fd' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1.5 }}>
+                <CircularProgress size={16} sx={{ color: 'primary.main', mr: 2 }} />
+                <Typography sx={{ 
+                  fontWeight: 500, 
+                  color: 'text.primary',
+                  fontSize: '0.95rem'
+                }}>
+                  Step {currentStep} of {scriptActions.length}
                 </Typography>
               </Box>
               <LinearProgress 
                 variant="determinate" 
                 value={(currentStep / scriptActions.length) * 100} 
                 sx={{ 
-                  height: 6, 
-                  borderRadius: 3,
-                  bgcolor: 'rgba(255,255,255,0.3)',
-                  '& .MuiLinearProgress-bar': {
-                    bgcolor: 'success.main'
-                  }
+                  height: 4, 
+                  borderRadius: 2,
+                  bgcolor: '#e0f2fe'
                 }}
               />
               {scriptActions[currentStep - 1] && (
-                <Typography variant="body2" sx={{ mt: 1, color: 'success.dark', fontFamily: 'monospace', fontSize: '0.85rem' }}>
-                  ▶️ {scriptActions[currentStep - 1].action.toUpperCase()}: {scriptActions[currentStep - 1].selector.split(',')[0]}
+                <Typography variant="body2" sx={{ 
+                  mt: 1.5, 
+                  color: 'text.secondary',
+                  fontSize: '0.85rem',
+                  fontFamily: 'monospace'
+                }}>
+                  {scriptActions[currentStep - 1].action.toUpperCase()}
                 </Typography>
               )}
             </Box>
           )}
 
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6" sx={{ color: 'primary.main', fontWeight: 600 }}>
+            <Typography variant="h6" sx={{ 
+              color: 'text.primary', 
+              fontWeight: 500,
+              fontSize: '1.1rem'
+            }}>
               Execution Logs ({logs.length})
             </Typography>
           </Box>
@@ -391,10 +347,10 @@ export const Runner: React.FC = () => {
           <List sx={{ 
             flexGrow: 1, 
             overflow: 'auto', 
-            bgcolor: '#f8f9fa', 
-            borderRadius: 1, 
+            bgcolor: '#fafbfc', 
+            borderRadius: 2, 
             p: 1,
-            border: '1px solid #dee2e6',
+            border: '1px solid #e1e5e9',
             maxHeight: 'calc(100vh - 400px)'
           }}>
             {logs.length === 0 && (
@@ -420,10 +376,11 @@ export const Runner: React.FC = () => {
                   key={index} 
                   divider 
                   sx={{ 
-                    bgcolor: isCurrentStep ? '#e3f2fd' : 'white', 
+                    bgcolor: isCurrentStep ? '#f0f9ff' : 'white', 
                     mb: 0.5, 
-                    borderRadius: 1,
-                    border: isCurrentStep ? '1px solid #1976d2' : '1px solid #e0e0e0'
+                    borderRadius: 2,
+                    border: isCurrentStep ? '1px solid #0ea5e9' : '1px solid #e2e8f0',
+                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
                   }}
                 >
                   <Box sx={{ mr: 2, display: 'flex', alignItems: 'center' }}>
@@ -452,9 +409,13 @@ export const Runner: React.FC = () => {
                     secondary={log.value ? `Value: ${log.value}` : undefined}
                     sx={{ 
                       '& .MuiListItemText-primary': { 
-                        fontWeight: isCurrentStep ? 600 : 400,
+                        fontWeight: isCurrentStep ? 500 : 400,
                         fontSize: '0.9rem'
-                      } 
+                      },
+                      '& .MuiListItemText-secondary': {
+                        fontSize: '0.8rem',
+                        fontFamily: 'monospace'
+                      }
                     }}
                   />
                   <Chip 

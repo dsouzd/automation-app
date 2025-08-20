@@ -12,12 +12,43 @@ const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#16f98fff',
-      light: '#75fb3cff',
-      dark: '#d0ea0cff',
+      main: '#2563eb',
+      light: '#3b82f6',
+      dark: '#1d4ed8',
     },
     secondary: {
-      main: '#fff7ed',
+      main: '#64748b',
+    },
+    background: {
+      default: '#f8fafc',
+      paper: '#ffffff',
+    },
+    text: {
+      primary: '#0f172a',
+      secondary: '#475569',
+    },
+  },
+  typography: {
+    fontFamily: '"Inter", "Roboto", "Helvetica Neue", Arial, sans-serif',
+    h6: {
+      fontWeight: 600,
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+          fontWeight: 500,
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+        },
+      },
     },
   },
 });
