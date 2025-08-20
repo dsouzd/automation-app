@@ -34,12 +34,12 @@ export const Home: React.FC = () => {
           gutterBottom 
           sx={{ 
             color: 'primary.main', 
-            fontWeight: 'bold',
+            fontWeight: 600,
             textAlign: 'center',
-            mb: 4
+            mb: 2
           }}
         >
-          Web Automation Tool
+          Web Automation Platform
         </Typography>
         
         <Typography 
@@ -51,7 +51,7 @@ export const Home: React.FC = () => {
             maxWidth: '600px'
           }}
         >
-          Enter your application URL to start automated testing with natural language instructions
+          Enter your application URL and describe automation tasks in natural language
         </Typography>
         
         <Box 
@@ -70,7 +70,7 @@ export const Home: React.FC = () => {
           <TextField
             {...register('url', { required: 'URL is required' })}
             fullWidth
-            label="Enter Application URL"
+            label="Application URL"
             variant="outlined"
             placeholder="http://localhost:4001"
             error={!!errors.url}
@@ -89,10 +89,8 @@ export const Home: React.FC = () => {
             variant="contained"
             size="large"
             sx={{
-              py: 2,
-              fontSize: '1.1rem',
-              bgcolor: 'primary.main',
-              '&:hover': { bgcolor: 'primary.dark' }
+              py: 1.5,
+              fontSize: '1rem'
             }}
           >
             Start Automation
